@@ -1,6 +1,6 @@
 //===========================================================================
 // clang-format off
-NAME          = "SR2NAV_V2"
+NAME          = "SR2NAV_V3"
 //#include <version.gxh>
 
 //TRANSLATIONDOMAIN = "core"
