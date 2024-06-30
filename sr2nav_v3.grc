@@ -1,0 +1,25 @@
+//
+// SR2NAV_v2.GRC
+//-----------------------------------------------------------------------------
+
+RESOURCE,FORM,SR2NAV2,"Prepare data for sr2nav.exe",-1
+FEDIT,,,48,"S-file *.air file to open",,OLD,,,*.air
+FEDIT,,,48,"Rover *.jps file to open",R,OLD,,,*.jps
+FEDIT,,,48,"1 base station *.jps file to open",R,OLD,,,*.jps
+FEDIT,,,48,"1 base station position file to open",R,OLD,,,*.pos
+FEDIT,,,48,"2 base station *.jps file to open",,OLD,,,*.jps
+FEDIT,,,48,"2 base station position file to open",,OLD,,,*.pos
+EDIT ,,,10,"Elevation mask (degrees)",,INT,"10"
+FEDIT,,,48,"Output directory for process",R,NEW,,,/
+FEDIT,,,48,"Sr2nav.exe location",R,OLD,,,*.exe
+LEDIT,,,20,"Edit sr2nav.cfg before process?",R,FORCE,"Yes",YesNo
+EBUT,&OK,0
+EBUT,&Cancel,-1,cancel
+HBUT,&Help,help
+
+RESOURCE,LIST,YesNo
+ITEM, Yes,1
+ITEM, No,0
+
+//RESOURCE,HELP,help,nogx.hlp
+

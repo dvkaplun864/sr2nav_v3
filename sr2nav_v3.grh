@@ -1,0 +1,42 @@
+﻿//------------------------------------------------------------------------
+//                         RESOURCE HEADER FILE
+//------------------------------------------------------------------------
+//
+// INPUT RESOURCE SCRIPT : sr2nav_v3.grc
+//
+
+//------------------------------------------------------------------------
+// FORM RESOURCE SR2NAV2
+
+// _SR2NAV2_0   File Edit Field - S-file *.air file to open
+// _SR2NAV2_1   File Edit Field - Rover *.jps file to open
+// _SR2NAV2_2   File Edit Field - 1 base station *.jps file to open
+// _SR2NAV2_3   File Edit Field - 1 base station position file to open
+// _SR2NAV2_4   File Edit Field - 2 base station *.jps file to open
+// _SR2NAV2_5   File Edit Field - 2 base station position file to open
+// _SR2NAV2_6   Edit Field - Elevation mask (degrees)
+// _SR2NAV2_7   File Edit Field - Output directory for process
+// _SR2NAV2_8   File Edit Field - Sr2nav.exe location
+// _SR2NAV2_9   List Edit Field - Edit sr2nav.cfg before process? List Used - YesNo
+// _SR2NAV2_10  Exit Button - OK
+// _SR2NAV2_11  Exit Button - Cancel
+// _SR2NAV2_12  Help Button - Help
+
+#define _SR2NAV2_0  ((DGW_OBJ) 0  )
+#define _SR2NAV2_1  ((DGW_OBJ) 1  )
+#define _SR2NAV2_2  ((DGW_OBJ) 2  )
+#define _SR2NAV2_3  ((DGW_OBJ) 3  )
+#define _SR2NAV2_4  ((DGW_OBJ) 4  )
+#define _SR2NAV2_5  ((DGW_OBJ) 5  )
+#define _SR2NAV2_6  ((DGW_OBJ) 6  )
+#define _SR2NAV2_7  ((DGW_OBJ) 7  )
+#define _SR2NAV2_8  ((DGW_OBJ) 8  )
+#define _SR2NAV2_9  ((DGW_OBJ) 9  )
+#define _SR2NAV2_10 ((DGW_OBJ) 10 )
+#define _SR2NAV2_11 ((DGW_OBJ) 11 )
+#define _SR2NAV2_12 ((DGW_OBJ) 12 )
+
+
+//------------------------------------------------------------------------
+// LIST RESOURCE YesNo
+

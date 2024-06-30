@@ -1,0 +1,455 @@
+//===========================================================================
+// clang-format off
+NAME          = "SR2NAV_V2"
+//#include <version.gxh>
+
+//TRANSLATIONDOMAIN = "core"
+//TRANSLATIONFRIENDLYPATH = "GX/GXDebug"
+
+DESCRIPTION   = " Prepare data and start SR2NAV2.EXE at the selected folder"
+// Revision History:
+// 
+//===========================================================================
+
+RESOURCE = "SR2NAV_v3.gr"
+#include "SR2NAV_v3.grh"
+
+//===========================================================================
+
+#include <all.gxh>
+// clang-format on
+
+
+//===========================================================================
+//                             GLOBAL VARIABLES
+//===========================================================================
+
+DGW    Diag;
+
+//string(STR_FILE) sFile;
+//string(STR_DEFAULT_LONG) sDefEdit;
+
+string(STR_FILE) sFile;	         // S-file name
+string(STR_FILE) sRover;	 // Rover jps file name
+string(STR_FILE) sBase1;	 // 1-st Base station jps file name
+string(STR_FILE) sPos1;	         // 1-st Base station position file name
+string(STR_FILE) sBase2;	 // 2-st Base station jps file name
+string(STR_FILE) sPos2;	         // 2-st Base station position file name
+string(STR_FILE) sOutDir;	 // Output directory for process
+string(STR_FILE) sAbsOutDir;     // Absolute output directory name
+string(STR_FILE) sSr2NavPath;    // Path to the SR2NAV2.exe actual version to start
+string(STR_FILE) sIntervalPath;
+string(STR_FILE) sMask_Ang;
+string(STR_FILE) sExit_txt;
+string(STR_FILE) sSr2Nav_cfg;   //Config file SR2NAV2.cfg full name
+string(STR_FILE) sInterval_txt; //File with time intervals interval.txt full name
+
+
+string(STR_FILE) sDrive, sDir,sName,sExt,sQual;   //Parts of file name  
+string(STR_FILE) sPosDest;                        //Path to destination pos file when it copying to the working directory
+string(STR_FILE) sfullname;
+
+string(STR_DEFAULT_LONG) strbuff;
+string(STR_DEFAULT_LONG) stime;
+string(STR_DEFAULT) sMaskVal;
+string(STR_DEFAULT) sMessage;
+
+string(STR_DEFAULT_LONG) sDefEdit, sDefEditType; //Default Editor  
+//string(STR_DEFAULT_SHORT) sWait;
+
+
+WA WA_Sr2Nav_cfg;          
+WA WA_interval_bat;
+WA WA_Sr2Nav_bat;
+WA WA_Mask_Ang;
+
+RA RA_interval_txt;
+RA RA_Sr2Nav_cfg;
+RA RA_Exit_txt;
+
+VA str_VA;
+
+int iMask;          //Elevation mask
+
+int i;
+int inum;
+int ilen;
+int iErr, iErr2;
+int iEdit;         //Edit interval.txt before process?  1-Yes, 0-No
+
+{
+   // --- Are we running interactively ? ---
+
+   if (iInteractive_SYS())
+   {
+      // --- Create the Dialogue ---
+
+      Diag = Create_DGW("SR2NAV2");
+
+      iErr=0; iErr2=0;
+
+      do{
+              // --- Set any Defaults from INI ---
+              SetInfoSYS_DGW(Diag, _SR2NAV2_0, DGW_FILEPATH, "SR2NAV2", "SFILE");
+              SetInfoSYS_DGW(Diag, _SR2NAV2_1, DGW_FILEPATH, "SR2NAV2", "FROVER");
+              SetInfoSYS_DGW(Diag, _SR2NAV2_2, DGW_FILEPATH, "SR2NAV2", "FBASE1");
+              SetInfoSYS_DGW(Diag, _SR2NAV2_3, DGW_FILEPATH, "SR2NAV2", "FPOS1");
+              SetInfoSYS_DGW(Diag, _SR2NAV2_4, DGW_FILEPATH, "SR2NAV2", "FBASE2");
+              SetInfoSYS_DGW(Diag, _SR2NAV2_5, DGW_FILEPATH, "SR2NAV2", "FPOS2");
+              SetInfoSYS_DGW(Diag, _SR2NAV2_6, DGW_TEXT, "SR2NAV2", "MASK");
+              SetInfoSYS_DGW(Diag, _SR2NAV2_7, DGW_FILEPATH, "SR2NAV2", "OUTDIR");
+              SetInfoSYS_DGW(Diag, _SR2NAV2_8, DGW_FILEPATH, "SR2NAV2", "FSR2NAV2");
+              SetInfoSYS_DGW(Diag, _SR2NAV2_9, DGW_LISTALIAS, "SR2NAV2", "YESNOEDIT");
+
+
+              // --- Run the Dialogue ---
+
+                   
+              i = iRunDialogue_DGW(Diag);
+              if (i == -1) Cancel_SYS();
+
+              // --- Put values back in INI ---
+
+              GetInfoSYS_DGW(Diag, _SR2NAV2_0, DGW_FILEPATH, "SR2NAV2", "SFILE");
+              GetInfoSYS_DGW(Diag, _SR2NAV2_1, DGW_FILEPATH, "SR2NAV2", "FROVER");
+              GetInfoSYS_DGW(Diag, _SR2NAV2_2, DGW_FILEPATH, "SR2NAV2", "FBASE1");
+              GetInfoSYS_DGW(Diag, _SR2NAV2_3, DGW_FILEPATH, "SR2NAV2", "FPOS1");
+              GetInfoSYS_DGW(Diag, _SR2NAV2_4, DGW_FILEPATH, "SR2NAV2", "FBASE2");
+              GetInfoSYS_DGW(Diag, _SR2NAV2_5, DGW_FILEPATH, "SR2NAV2", "FPOS2");
+              GetInfoSYS_DGW(Diag, _SR2NAV2_6, DGW_TEXT, "SR2NAV2", "MASK");
+              GetInfoSYS_DGW(Diag, _SR2NAV2_7, DGW_FILEPATH, "SR2NAV2", "OUTDIR");
+              GetInfoSYS_DGW(Diag, _SR2NAV2_8, DGW_FILEPATH, "SR2NAV2", "FSR2NAV2");
+              GetInfoSYS_DGW(Diag, _SR2NAV2_9, DGW_LISTALIAS, "SR2NAV2", "YESNOEDIT");
+
+
+              GetString_SYS("SR2NAV2", "FBASE2",sBase2);
+              GetString_SYS("SR2NAV2", "FPOS2",sPos2);
+
+             if ( iStrlen_STR(sBase2) != 0   &&  iStrlen_STR(sPos2) == 0 ) 
+             {
+                 DisplayMessage_SYS(_("Error"), _("Select a file base2.pos for the 2-nd base station"));
+                 iErr = 1;
+             }
+             else
+                 iErr = 0;     
+
+
+             //Check if file phase_L1.vel exist at the output directory
+
+             GetString_SYS("SR2NAV2", "OUTDIR",sOutDir);
+             FileNamePart_STR(sOutDir, sDrive, STR_FILE_PART_VOLUME);
+   	     FileNamePart_STR(sOutDir, sDir  , STR_FILE_PART_DIRECTORY);
+             FileNamePart_STR(sOutDir, sQual , STR_FILE_PART_QUALIFIERS);
+             FileCombineParts_STR(sDrive, sDir, "Phase_L1", "vel", sQual, sfullname);
+
+             if(iFileExist_SYS(sfullname)==1)
+             {
+                    Strcpy_STR(sMessage,"File " );
+                    Strcat_STR(sMessage, sfullname);
+                    Strcat_STR(sMessage,_(" already exist! Overwright?"));
+                    
+                    if ( iDisplayQuestion_SYS(_("WARNING!"),sMessage) == 0) // No              
+                        iErr2 = 1;
+                    else                       // Yes
+                        iErr2 = 0;
+             }
+        
+        }while(iErr || iErr2);
+   }
+   
+   //Check if file Exit.txt exist at the output directory and delete it
+
+   GetString_SYS("SR2NAV2", "OUTDIR",sOutDir);
+   FileNamePart_STR(sOutDir, sDrive, STR_FILE_PART_VOLUME);
+   FileNamePart_STR(sOutDir, sDir  , STR_FILE_PART_DIRECTORY);
+   FileNamePart_STR(sOutDir, sQual , STR_FILE_PART_QUALIFIERS);
+   FileCombineParts_STR(sDrive, sDir, "Exit", "txt", sQual, sExit_txt);
+
+   if(iFileExist_SYS(sExit_txt)==1)
+            iDeleteFile_SYS(sExit_txt);
+
+   //Check if file Exit.txt exist at the output directory and delete it
+   FileCombineParts_STR(sDrive, sOutDir, "interval", "txt", sQual, sInterval_txt);
+   if(iFileExist_SYS(sInterval_txt)==1)
+            iDeleteFile_SYS(sInterval_txt);
+
+
+
+   // --- Get Parameters ---
+
+   GetString_SYS("SR2NAV2", "SFILE",sFile);
+   GetString_SYS("SR2NAV2", "FROVER",sRover);
+   GetString_SYS("SR2NAV2", "FBASE1",sBase1);
+   GetString_SYS("SR2NAV2", "FPOS1",sPos1);
+   GetString_SYS("SR2NAV2", "FBASE2",sBase2);
+   GetString_SYS("SR2NAV2", "FPOS2",sPos2);
+   iMask = iGetInt_SYS("SR2NAV2", "MASK");
+   GetString_SYS("SR2NAV2", "OUTDIR",sOutDir);
+   GetString_SYS("SR2NAV2", "FSR2NAV2",sSr2NavPath);
+   iEdit=iGetInt_SYS("SR2NAV2", "YESNOEDIT");
+
+   FileNamePart_STR(sOutDir, sDrive, STR_FILE_PART_VOLUME);
+   FileNamePart_STR(sOutDir, sDir  , STR_FILE_PART_DIRECTORY);
+   FileNamePart_STR(sOutDir, sQual , STR_FILE_PART_QUALIFIERS);
+
+   Strcpy_STR(sName, "Sr2Nav");                //Create sr2nav.cfg file and put information into it
+   Strcpy_STR(sExt, "cfg");
+
+   FileCombineParts_STR(sDrive, sDir, sName, sExt, sQual, sSr2Nav_cfg);
+
+   
+   //Create absolute path to input files
+
+   AbsoluteFileName_SYS(sFile, sFile);
+   AbsoluteFileName_SYS(sRover, sRover);
+   AbsoluteFileName_SYS(sBase1, sBase1);
+   AbsoluteFileName_SYS(sBase2, sBase2);
+
+   AbsoluteFileName_SYS(sPos1, sPos1);
+   AbsoluteFileName_SYS(sPos2, sPos2);
+
+   //Copy base.pos and base2.pos files to the working directory
+
+    AbsoluteFileName_SYS(sOutDir, sAbsOutDir);
+
+    FileNamePart_STR(sAbsOutDir, sDrive  , STR_FILE_PART_VOLUME);
+    FileNamePart_STR(sAbsOutDir, sDir  , STR_FILE_PART_DIRECTORY);
+    FileNamePart_STR(sPos1, sQual  , STR_FILE_PART_QUALIFIERS);
+    FileCombineParts_STR(sDrive, sDir, "base", "pos", sQual, sPosDest);
+
+    if (iCopyFile_SYS(sPos1,sPosDest) != 0)
+    {
+          Abort_SYS("Unable to copy file or base.pos source file not found");
+    }
+
+    if (iStrlen_STR(sPos2) > 0 )
+    {
+   
+          FileCombineParts_STR(sDrive, sDir, sName, sExt, sQual, sSr2Nav_cfg);
+          FileNamePart_STR(sAbsOutDir, sDrive  , STR_FILE_PART_VOLUME);
+          FileNamePart_STR(sAbsOutDir, sDir  , STR_FILE_PART_DIRECTORY);
+          FileNamePart_STR(sBase2, sQual  , STR_FILE_PART_QUALIFIERS);
+          FileCombineParts_STR(sDrive, sDir, "base2", "pos", sQual, sPosDest);
+
+          if (iCopyFile_SYS(sBase1,sPosDest) != 0)
+          {
+                   Abort_SYS("Unable to copy file or base2.pos source file not found");
+          }
+
+    }
+   
+   
+   //Create SR2NAV2.cfg file
+   
+   if(iFileExist_SYS(sSr2Nav_cfg)==1)    //first check if file already exist and delete it
+            iDeleteFile_SYS(sSr2Nav_cfg);
+
+ 
+   WA_Sr2Nav_cfg=Create_WA(sSr2Nav_cfg,WA_NEW); 
+
+   _Puts_WA(WA_Sr2Nav_cfg,"*"); _Puts_WA(WA_Sr2Nav_cfg,sFile); //*   S-file name
+   NewLine_WA(WA_Sr2Nav_cfg);
+   _Puts_WA(WA_Sr2Nav_cfg,"*18");                               //*18  May be should be a special bar for leap seconds   
+   NewLine_WA(WA_Sr2Nav_cfg);
+   _Puts_WA(WA_Sr2Nav_cfg,"*");                                 //*    Reserve line
+   NewLine_WA(WA_Sr2Nav_cfg);
+   _Puts_WA(WA_Sr2Nav_cfg,"*");                                 //*    The line for times boundaries (could be empty?)
+   NewLine_WA(WA_Sr2Nav_cfg);
+   _Puts_WA(WA_Sr2Nav_cfg,"*"); _Puts_WA(WA_Sr2Nav_cfg,sRover); //*C:\Test_SR2NAV2\RAW\bort\BM026_2024-04-13_03-55.jps
+   NewLine_WA(WA_Sr2Nav_cfg);
+   _Puts_WA(WA_Sr2Nav_cfg,"*"); _Puts_WA(WA_Sr2Nav_cfg,sBase1); //*C:\Test_SR2NAV2\RAW\base\bm15_240413-fix.jps
+
+    NewLine_WA(WA_Sr2Nav_cfg);
+   _Puts_WA(WA_Sr2Nav_cfg,"*"); _Puts_WA(WA_Sr2Nav_cfg,sBase2);
+    Destroy_WA(WA_Sr2Nav_cfg);   
+
+    Strcpy_STR(sName, "Mask");                //Create Mask.Ang file and put elevation mask value into it
+    Strcpy_STR(sExt, "Ang");
+
+    FileCombineParts_STR(sDrive, sDir, sName, sExt, sQual, sMask_Ang);
+    WA_Mask_Ang=Create_WA(sMask_Ang,WA_NEW); 
+    FormatR2_STR((real)iMask, sMaskVal, 10, 1);    
+    _Puts_WA(WA_Mask_Ang,sMaskVal);
+    Destroy_WA(WA_Mask_Ang);   
+
+
+
+    //Create full path to SR2NAV.exe.
+    
+    AbsoluteFileName_SYS(sSr2NavPath, sSr2NavPath);
+
+    //Create full path to interval.exe.  	SR2NAV2 and interval should be in the same folder
+
+    FileNamePart_STR(sSr2NavPath, sDrive  , STR_FILE_PART_VOLUME);
+    FileNamePart_STR(sSr2NavPath, sDir  , STR_FILE_PART_DIRECTORY);
+    Strcpy_STR(sName, "interval");
+    FileNamePart_STR(sSr2NavPath, sExt  , STR_FILE_PART_EXTENSION);
+    FileNamePart_STR(sSr2NavPath, sQual  , STR_FILE_PART_QUALIFIERS);
+    FileCombineParts_STR(sDrive, sDir, sName, sExt, sQual, sIntervalPath);
+
+    AbsoluteFileName_SYS(sIntervalPath, sIntervalPath);          
+    
+    AbsoluteFileName_SYS(sOutDir, sfullname);                      //Create path for the file _interval_.bat
+    FileNamePart_STR(sfullname, sDrive  , STR_FILE_PART_VOLUME);
+    FileCombineParts_STR(sDrive, sOutDir, "_interval_","bat",sQual,sfullname);   
+
+     WA_interval_bat=Create_WA(sfullname,WA_NEW);                //Create file _interval_.bat 
+
+     _Puts_WA(WA_interval_bat,sIntervalPath);                    //write to _interval_.bat
+     NewLine_WA(WA_interval_bat);    
+     Destroy_WA(WA_interval_bat);                                                  
+ 
+     //iShellExecute_SYS("open","_interval_","",sOutDir,SW_HIDE);
+
+          
+     iShellExecute_SYS("open","_interval_","",sOutDir,SW_SHOWNORMAL);
+
+     Strcpy_STR(sName, "interval");
+     Strcpy_STR(sExt, "txt");
+     FileCombineParts_STR(sDrive, sOutDir, sName, sExt, sQual, sInterval_txt);
+
+     FileCombineParts_STR(sDrive, sOutDir, "Exit", sExt, sQual, sExit_txt);
+
+
+     i=0;
+     do
+     {
+              i=iFileExist_SYS(sInterval_txt);                    //0 - File doesn't exist
+								  //1 - File exists
+
+
+              if(iFileExist_SYS(sExit_txt))                       //Check file Exit.txt which created if abnormal termination 
+              {
+                  RA_Exit_txt=Create_RA(sExit_txt);
+                  iGets_RA(RA_Exit_txt, strbuff);
+  
+                  if(iFileExist_SYS(sSr2Nav_cfg))                 // If sr2nav.cfg had been already exist but the process has been terminated
+                       iDeleteFile_SYS(sSr2Nav_cfg);              // it's better to delete sr2nav.cfg 
+ 
+                  iDeleteFile_SYS(sExit_txt); 
+
+                  Abort_SYS(strbuff);                             //Abort with the message from Exit.txt
+              }   
+     }while(i==0);
+     
+     RA_interval_txt=Create_RA(sInterval_txt);                   //Read file interval.txt
+            
+     i=-1;
+     do
+     {
+          if (iGets_RA(RA_interval_txt, strbuff) == 1)          //reached end of file
+          { 
+              Destroy_RA(RA_interval_txt);
+              Abort_SYS("Wrong file \"interval.txt\"");
+          } 
+          i=iStrStr_STR(strbuff, "[Common]",STR_CASE_TOLERANT);  //Get the string with Common time interval
+		  
+     }while(i == -1);
+
+     Destroy_RA(RA_interval_txt);
+
+     i=iStrStr_STR(strbuff, "->",STR_CASE_TOLERANT);       //Get time interval from string: "2024:04:13:03:57:11.0  2024:04:13:12:23:03.0 -> [Common]"
+
+     if(i==-1)
+         Abort_SYS("Wrong file \"interval.txt\"");
+
+     Substr_STR(stime, strbuff,0,i);              
+
+     RA_Sr2Nav_cfg=Create_RA(sSr2Nav_cfg);
+
+     str_VA=Create_VA(-256,10,1);
+
+     i=0; inum=0;
+
+     do                                                //Read file sr2nav.cfg string by string and put to string array str_VA
+     {
+          i=iGets_RA(RA_Sr2Nav_cfg, strbuff);
+          SetString_VA(str_VA,inum,0,strbuff);
+          inum++;
+
+     }while(i != 1);
+
+     Destroy_RA(RA_Sr2Nav_cfg);
+
+     Strcpy_STR(strbuff,"*");               //Modify  time string in the file sr2nav.cfg. Example: *2024:04:13:03:57:11.0  2024:04:13:12:23:03.0 
+
+     Strcat_STR(strbuff, stime);
+     SetString_VA(str_VA,3,0,strbuff);
+
+
+     WA_Sr2Nav_cfg=Create_WA(sSr2Nav_cfg,WA_NEW);  //Write modified strings to sr2nav.cfg
+     ilen=iLen_VA(str_VA);
+     
+     for(i=0; i<ilen; i++)
+     {
+          GetString_VA(str_VA, i, 0,strbuff);
+          _Puts_WA(WA_Sr2Nav_cfg,strbuff); 
+          NewLine_WA(WA_Sr2Nav_cfg);
+     }
+     Destroy_WA(WA_Sr2Nav_cfg);  
+        
+     if(iEdit == 1)   // If user set point "Edit sr2nav.cfg?" as "Yes", open editor to edit sr2nav.cfg  
+     {
+
+         // --- get editor name ---
+
+         if (iGlobal_SYS("MONTAJ.DEFAULT_EDITOR", sDefEdit))    //If default editor not set run newedit.gx to set editor
+             iRunGX_SYS("newedit");
+         iGlobal_SYS("MONTAJ.DEFAULT_EDITOR", sDefEdit);        //Get the defailt editor (usually notepad.exe) 
+
+
+         i = SYS_RUN_TYPE_WINDOWS + SYS_RUN_WIN_WAIT;
+        
+         // --- reset to default no wait ---
+
+         //     SetString_SYS("EDIT", "WAIT", "NOWAIT");
+
+
+         // --- check if DOS editor ---
+
+         if (!iGlobal_SYS("MONTAJ.DEFAULT_EDITOR_TYPE", sDefEditType))
+         {
+              ToUpper_STR(sDefEditType);
+              if (iCharComp_STR(sDefEditType, "D"))
+              i = SYS_RUN_TYPE_DOS;
+          }
+
+
+          // --- edit ---
+
+          if (iRun_SYS(sDefEdit, sSr2Nav_cfg, i))
+          {
+                  Printf_STR(sFile, sizeof(sFile), _("Unable to run %s."), sDefEdit);
+                  Abort_SYS(sFile);
+          }
+
+     }
+
+
+     AbsoluteFileName_SYS(sOutDir, sfullname);                      //Create path for the file _SR2NAV2_.bat
+     FileNamePart_STR(sfullname, sDrive  , STR_FILE_PART_VOLUME);
+     FileCombineParts_STR(sDrive, sOutDir, "_Sr2Nav_","bat",sQual,sfullname);   
+
+     WA_Sr2Nav_bat=Create_WA(sfullname,WA_NEW);            //Create file _SR2NAV2_.bat 
+
+     _Puts_WA(WA_Sr2Nav_bat,sSr2NavPath);                  //write to _SR2NAV2_.bat
+     NewLine_WA(WA_Sr2Nav_bat);    
+     Destroy_WA(WA_Sr2Nav_bat);                                                  
+ 
+     iShellExecute_SYS("open","_Sr2Nav_","",sOutDir,SW_SHOWNORMAL);
+
+     //Check if abnormal termination
+
+     FileNamePart_STR(sfullname, sDrive  , STR_FILE_PART_VOLUME);
+     FileNamePart_STR(sfullname, sDir  , STR_FILE_PART_DIRECTORY);
+     FileCombineParts_STR(sDrive, sDir, "Exit","txt",sQual,sExit_txt);  
+
+     if(iFileExist_SYS(sExit_txt))
+     {
+            RA_Exit_txt=Create_RA(sExit_txt);
+            iGets_RA(RA_Exit_txt, strbuff);
+  
+            Abort_SYS(strbuff);
+     }
+   
+}
